@@ -1,0 +1,38 @@
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: rgb(240, 247, 247);
+}
+
+.RichTextEditor__block___2Vs_D{
+min-height: 200px !important;
+
+}
+.overFlowScroll{
+overflow-y: auto !important;
+ max-height: 90vh !important;
+}
+
+.markdown ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: disc;
+  margin: 20px 0;
+}
+
+.markdown ul li {
+  margin: 10px 0;
+}
+a{
+  text-decoration: none;
+  color:black;
+  
+}
