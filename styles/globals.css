@@ -36,3 +36,6 @@ a{
   color:black;
   
 }
+textarea:focus, input:focus{
+  outline: none;
+}

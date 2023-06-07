@@ -184,7 +184,6 @@ export default function CreateJob() {
                   autoComplete="company_name"
                   autoFocus
                   onChange={updatePost}
-
                 />
                 <TextField
                   margin="normal"

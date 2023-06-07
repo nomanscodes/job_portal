@@ -1,141 +1,125 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import * as React from 'react';
-import Head from 'next/head';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Link from '@mui/material/Link';
-import Paper from '@mui/material/Paper';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import { useState, useEffect } from 'react';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Typography from '@mui/material/Typography';
+import { Button, FormControl, Grid, Input, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { parseCookies } from 'nookies';
+import { useRouter } from 'next/router';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { parseCookies } from "nookies";
-import cookie from "js-cookie";
-import { useRouter } from 'next/router';
+import Head from 'next/head';
+import ReactHtmlParser from "react-html-parser";
+import { ReactMarkdown } from 'react-markdown/lib/react-markdown';
+
 import MyStatefulEditor from '@/Component/TextEditor';
-import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
-import Router from "next/router";
 
-
-const defaultTheme = createTheme();
-
-export default function EditJob() {
-
-  const [userId, setUserId] = useState("")
-
-  useEffect(() => {
-    const id = Router?.query
-    setUserId(id)
-  }, [userId])
-
-  console.log("userId", userId);
+const Edit = () => {
+  const router = useRouter();
+  const id = router?.query?.id;
 
   const cookies = parseCookies();
-  const userCookies = cookies?.access;
+  const token = cookies?.access;
 
-  const router = useRouter()
+  const [jobPost, setJobPost] = useState([]);
+  const [data, setData] = useState([]);
 
-  const [loading, setLoding] = useState(false)
+  const [title, setTitle] = useState('');
+  const [company_name, setCompany_name] = useState('');
+  const [overview, setOverview] = useState('')
+  const [responsibilities, setResponsibilities] = useState('')
+  const [requirements, setRequirements] = useState('')
+  const [job_type, setJob_type] = useState('')
+  const [location, setLocation] = useState('')
+  const [shift, setSift] = useState('')
 
-  const [post, setPost] = useState({
-    title: "",
-    company_name: "",
-    overview: "",
-    job_type: "",
-    location: "",
-    shift: ""
-  });
+  const handleFilter = () => {
+    const filtered = jobPost.filter((item) => {
+      return item.id == id;
+    });
 
-  const updatePost = (e) => {
-    setPost({ ...post, [e.target.name]: e.target.value });
+    setData(filtered);
   };
 
-  const [responsibilities, setResponsibilities] = useState("");
-  const [requirements, setRequirements] = useState("");
+  const getJobData = async () => {
+    var myHeaders = new Headers();
+    myHeaders.append('Authorization', `Bearer ${token}`);
 
-  const handleresponsibilities = (value) => {
-    setResponsibilities(value)
+    var requestOptions = {
+      method: 'GET',
+      headers: myHeaders,
+      redirect: 'follow',
+    };
+
+    const job = await fetch(
+      `https://nomanhasan.pythonanywhere.com/api/view/`,
+      requestOptions
+    );
+
+    const jobData = await job.json();
+    setJobPost(jobData.data);
   };
-  const handlerequirements = (value) => {
-    setRequirements(value)
-  };
-
-  const [test, setTest] = useState({
-    responsibilities: [],
-    requirements: [],
-    title: [],
-    company_name: [],
-    overview: [],
-    job_type: [],
-    location: [],
-    shift: []
-  });
-
-  const { title, company_name, overview, job_type, location, shift } = post
 
   useEffect(() => {
-    setTest({ ...test, responsibilities, requirements, title, company_name, overview, job_type, location, shift });
-  }, [responsibilities, requirements, post]);
+    getJobData();
+  }, []);
 
+  useEffect(() => {
+    if (jobPost.length > 0) {
+      handleFilter();
+    }
+  }, [jobPost]);
 
-  async function sendPost(test) {
+  useEffect(() => {
+    if (data.length > 0) {
+      setTitle(data[0].title);
+      setCompany_name(data[0].company_name)
+      setOverview(data[0].overview)
+      setResponsibilities(data[0].responsibilities)
+      setRequirements(data[0].requirements)
+      setJob_type(data[0].job_type)
+      setLocation(data[0].location)
+      setSift(data[0].shift)
+    }
+  }, [data]);
 
-    // console.log("test", test);
+  async function sendPost(responsibilities, requirements, company_name, job_type, location, overview, shift, title) {
+
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", `Bearer ${userCookies}`);
+    myHeaders.append("Authorization", `Bearer ${token}`);
 
     var raw = JSON.stringify({
-      "title": test.title,
-      "company_name": test.company_name,
-      "overview": test.overview,
-      "responsibilities": test.responsibilities,
-      "requirements": test.requirements,
-      "job_type": test.job_type,
-      "location": test.location,
-      "shift": test.shift
+      "title": title,
+      "company_name": company_name,
+      "overview": overview,
+      "responsibilities": responsibilities,
+      "requirements": requirements,
+      "job_type": job_type,
+      "location": location,
+      "shift": shift
     });
 
     var requestOptions = {
-      method: "POST",
+      method: "PUT",
       headers: myHeaders,
       body: raw
     };
 
-    const Job = await fetch(`https://nomanhasan.pythonanywhere.com/api/view/`, requestOptions);
+    const Job = await fetch(`https://nomanhasan.pythonanywhere.com/api/edit/${id}/`, requestOptions);
 
     const result = await Job.json();
 
-
-    if (result.errors) {
-      toast.error(result.errors);
-      setLoding(false);
-    }
-
     toast.success(result.msg);
     setTimeout(() => {
-      router.push("/");
+      router.push("/joblist");
     }, 1000);
-    setLoding(false);
+
   }
 
   function SubmitHandler(e) {
     e.preventDefault();
-    const { responsibilities, requirements, company_name, job_type, location, overview, shift, title } = test;
 
-    setLoding(true);
     if (responsibilities == "" || requirements == "" || company_name == "" || job_type == "" || location == "" || overview == "" || shift == "" || title == "") {
       toast.error(`All field are required`);
     } else {
-      sendPost(test)
+      sendPost(responsibilities, requirements, company_name, job_type, location, overview, shift, title)
     }
   }
 
@@ -147,144 +131,62 @@ export default function EditJob() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <ThemeProvider theme={defaultTheme}>
-        <ToastContainer />
-        <Grid container component="main" sx={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: "absoulate" }}>
-          <Grid
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
+      <ToastContainer />
+      <div style={{ marginTop: 77, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <FormControl>
+          <Typography sx={{ mb: 5 }} variant='h5'>Update Job Post</Typography>
+          <TextField onChange={(e) => setTitle(e.target.value)} value={title} id="outlined-basic" label="Title" variant="outlined" sx={{ width: 500 }} />
 
-            }}
-            item xs={12} sm={8} md={10} component={Paper} elevation={6} square>
-            <Box
-              sx={{
-                my: 8,
-                mx: 4,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-              }}
+          <TextField onChange={(e) => setCompany_name(e.target.value)} value={company_name} id="outlined-basic" label="Company Name" variant="outlined" sx={{ width: 500, mt: 2 }} />
+
+          <TextField onChange={(e) => setOverview(e.target.value)} value={overview} id="outlined-basic" label="Overview" variant="outlined" sx={{ width: 500, mt: 2, backgroundColor: "white" }} />
+
+
+          <textarea className='textArea' cols="30" onChange={(e) => setResponsibilities(e.target.value)} value={responsibilities} style={{ marginTop: 12, padding: 8 }} ></textarea>
+
+          <textarea className='textArea' cols="30" onChange={(e) => setRequirements(e.target.value)} value={requirements} style={{ marginTop: 12, padding: 8 }} ></textarea>
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel id="demo-simple-select-label">Job Type</InputLabel>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              name='job_type'
+              label="Job"
+              value={job_type}
+              onChange={(e) => setJob_type(e.target.value)}
             >
-
-              <Typography component="h1" variant="h5">
-                Create JOB
-              </Typography>
-              <Box component="form" noValidate sx={{ mt: 1 }}>
-
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  id="title"
-                  label="Job Title"
-                  name="title"
-                  autoComplete="title"
-                  autoFocus
-                  onChange={updatePost}
-                />
-
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  id="company_name"
-                  label="Company Name"
-                  name="company_name"
-                  autoComplete="company_name"
-                  autoFocus
-                  onChange={updatePost}
-
-                />
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  id="overview"
-                  label="Overview"
-                  name="overview"
-                  autoComplete="overview"
-                  autoFocus
-                  onChange={updatePost}
-
-                />
-                <Grid sx={{ marginTop: 1 }}>
-                  <Typography sx={{ marginBottom: 1 }}>
-                    Responsibilities
-                  </Typography>
-                  <MyStatefulEditor
-                    name="responsibilities"
-                    value
-                    onChange={handleresponsibilities}
-                  />
-                </Grid>
-
-                <Grid sx={{ marginTop: 2 }}>
-                  <Typography sx={{ marginBottom: 1 }}>
-                    Requirements
-                  </Typography>
-                  <MyStatefulEditor
-                    name="requirements"
-                    value
-                    onChange={handlerequirements}
-                  />
-                </Grid>
-
-                <FormControl fullWidth sx={{ mt: 2 }}>
-                  <InputLabel id="demo-simple-select-label">Job Type</InputLabel>
-                  <Select
-                    labelId="demo-simple-select-label"
-                    id="demo-simple-select"
-                    name='job_type'
-                    label="Job"
-                    onChange={updatePost}
-                  >
-                    <MenuItem value="Full Time">Full Time</MenuItem>
-                    <MenuItem value="Part Time">Part Time</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <TextField
-                  sx={{ mt: 2 }}
-                  margin="normal"
-                  required
-                  fullWidth
-                  id="location"
-                  label="Location"
-                  name="location"
-                  autoComplete="location"
-                  autoFocus
-                  onChange={updatePost}
-                />
-                <FormControl fullWidth sx={{ mt: 2 }}>
-                  <InputLabel id="demo-simple-select-label">Shift</InputLabel>
-                  <Select
-                    labelId="demo-simple-select-label"
-                    id="demo-simple-select"
-                    name='shift'
-                    label="Age"
-                    onChange={updatePost}
-                  >
-                    <MenuItem value="Day Shift">Day Shift</MenuItem>
-                    <MenuItem value="Night Shift">Night Shift</MenuItem>
-                  </Select>
-                </FormControl>
-                <Button
-                  type="submit"
-                  onClick={SubmitHandler}
-                  fullWidth
-                  variant="contained"
-                  sx={{ mt: 3, mb: 2 }}
-                >
-                  Create
-                </Button>
-
-              </Box>
-            </Box>
-          </Grid>
-        </Grid>
-      </ThemeProvider >
+              <MenuItem value="Full Time">Full Time</MenuItem>
+              <MenuItem value="Part Time">Part Time</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField onChange={(e) => setLocation(e.target.value)} value={location} id="outlined-basic" label="Location" variant="outlined" sx={{ width: 500, mt: 2 }} />
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel id="demo-simple-select-label">Shift</InputLabel>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              name='shift'
+              label="Shift"
+              value={shift}
+              onChange={(e) => setSift(e.target.value)}
+            >
+              <MenuItem value="Day Shift">Day Shift</MenuItem>
+              <MenuItem value="Night Shift">Night Shift</MenuItem>
+            </Select>
+          </FormControl>
+          <Button
+            type="submit"
+            onClick={SubmitHandler}
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+          >
+            Update
+          </Button>
+        </FormControl>
+      </div>
     </>
   );
-}
+};
+
+export default Edit;
