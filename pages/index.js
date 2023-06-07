@@ -1,11 +1,10 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import JobCard from "@/Component/Card";
 import Head from "next/head";
 import { Grid } from "@mui/material";
 import { parseCookies } from "nookies";
-import cookie from "js-cookie";
 import { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
 import ReactHtmlParser from "react-html-parser";
@@ -30,7 +29,7 @@ const Home = () => {
 
   console.log("jobPost", jobPost);
 
-  const getJobData = async () => {
+  const getJobData =  async  () => {
     var myHeaders = new Headers();
     myHeaders.append("Authorization", `Bearer ${token}`);
 
@@ -51,6 +50,7 @@ const Home = () => {
 
   useEffect(() => {
     getJobData();
+
   }, []);
 
   const [open, setOpen] = useState(false);

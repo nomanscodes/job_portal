@@ -1,14 +1,12 @@
-import { Button, FormControl, Grid, Input, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Button, FormControl,InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { parseCookies } from 'nookies';
 import { useRouter } from 'next/router';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Head from 'next/head';
-import ReactHtmlParser from "react-html-parser";
-import { ReactMarkdown } from 'react-markdown/lib/react-markdown';
 
-import MyStatefulEditor from '@/Component/TextEditor';
 
 const Edit = () => {
   const router = useRouter();
@@ -58,7 +56,7 @@ const Edit = () => {
 
   useEffect(() => {
     getJobData();
-  }, []);
+  }, [getJobData]);
 
   useEffect(() => {
     if (jobPost.length > 0) {
